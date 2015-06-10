@@ -1,25 +1,26 @@
-
-/*
-* Getting Started example sketch for nRF24L01+ radios
-* This is a very basic example of how to send data from one node to another
-* Updated: Dec 2014 by TMRh20
-*/
-
 #include <SPI.h>
 #include "RF24.h"
-
-/****************** User Config ***************************/
-/***      Set this radio as radio number 0 or 1         ***/
-bool radioNumber = 1;
-
+ 
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(7, 8);
 /**********************************************************/
 
 byte addresses[][6] = {"1Node", "2Node"};
 
-// Used to control whether this node is sending or receiving
-bool role = 1;
+enum Commands { 
+  FORWARD=8, 
+  BACKWARD=2, 
+  LEFT=4, 
+  RIGHT=6, 
+  CLAW_FW=18, 
+  CLAW_BW=12, 
+  WRIST_FW=28,
+  WRIST_BW=22,
+  ELBOW_FW=38,
+  ELBOW_BW=32,
+  RIM_FW=48,
+  RIM_BW=42
+}; 
 
 void setup() {
   Serial.begin(9600);
@@ -39,15 +40,16 @@ void setup() {
   // Start the radio listening for data
   radio.startListening();
 }
-
-int command = 0;
-void loop() {
-
-  sendCommand(command++);
-
-  // Try again 1s later
+ 
+ 
+void loop() { 
+  sendCommand(FORWARD);
+ 
+  delay(1000); 
+  sendCommand(BACKWARD);
+  
   delay(1000);
-
+  sendCommand(99);
 }
 
 void sendCommand(int command) {
@@ -78,9 +80,11 @@ void sendCommand(int command) {
     radio.read( &response, sizeof(int) );
 
     if (command == response) {
-      Serial.println(F("Ack received"));
+      Serial.print(F("Ack received : "));
+      Serial.println(response);
     } else {
-      Serial.println(F("NACK received"));
+      Serial.print(F("NACK received :"));
+      Serial.println(response);
     }
   }
 }
